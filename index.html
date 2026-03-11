@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Feliz Cumpleaños Fer</title>
+
+<style>
+body{
+  margin:0;
+  background:white;
+  font-family:'Comic Sans MS', cursive;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  height:100vh;
+  text-align:center;
+}
+
+/* TEXTO INICIAL */
+.hint{
+  position:absolute;
+  top:50px;
+  font-size:40px;
+  font-weight:bold;
+  color:#ff4da6;
+  text-shadow:2px 2px 0 #ffcc00;
+  animation:bounce 1s infinite;
+}
+
+@keyframes bounce{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-15px)}
+}
+
+.arrow{
+  position:absolute;
+  top:110px;
+  font-size:45px;
+  animation:arrowBounce 1s infinite;
+}
+
+@keyframes arrowBounce{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(10px)}
+}
+
+/* SOBRE */
+.centerArea{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.envelope{
+  position:relative;
+  width:400px;
+  height:280px;
+  background:#800080; /* sobre morado */
+  border-radius:6px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:all 0.5s ease;
+}
+
+.flap{
+  position:absolute;
+  top:0;
+  left:0;
+  width:0;
+  height:0;
+  border-left:200px solid transparent;
+  border-right:200px solid transparent;
+  border-top:140px solid #6a0dad;
+  transform-origin:top;
+  transition:transform 0.8s;
+}
+
+/* MENSAJE PRINCIPAL */
+.messageContainer{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -50%);
+  opacity:0;
+  text-align:center;
+}
+
+.messageContainer h1{
+  font-size:80px;
+  font-weight:bold;
+  color:#ff1493;
+  text-shadow:2px 2px 4px #aaa;
+  margin:0 0 20px 0;
+  animation:rainbow 3s linear infinite;
+}
+
+.messageContainer p{
+  font-size:22px;
+  font-weight:bold;
+  line-height:1.5;
+  max-width:700px;
+  margin:0 auto;
+  color:#333;
+}
+
+@keyframes rainbow{
+  0%{color:#ff0000;}
+  20%{color:#ff8c00;}
+  40%{color:#ffee00;}
+  60%{color:#00ff6a;}
+  80%{color:#00c3ff;}
+  100%{color:#ff00ea;}
+}
+
+/* CONFETI EXPLOSION */
+.confetti{
+  position:fixed;
+  width:8px;
+  height:8px;
+}
+
+@keyframes explode{
+  to{
+    transform:translate(var(--x),var(--y)) rotate(720deg);
+    opacity:0;
+  }
+}
+
+/* CONFETI INFINITO */
+.fallConfetti{
+  position:fixed;
+  top:-10px;
+  width:10px;
+  height:10px;
+  animation:fall linear infinite;
+}
+
+@keyframes fall{
+  to{
+    transform:translateY(110vh) rotate(720deg);
+  }
+}
+
+/* GLOBOS */
+.balloon{
+  position:fixed;
+  bottom:-100px;
+  width:40px;
+  height:50px;
+  border-radius:50%;
+  animation:riseBalloon linear forwards;
+}
+
+.balloon::after{
+  content:"";
+  position:absolute;
+  width:2px;
+  height:40px;
+  background:#555;
+  left:50%;
+  top:50px;
+}
+
+@keyframes riseBalloon{
+  to{
+    transform:translateY(-120vh);
+  }
+}
+
+/* FUEGOS ARTIFICIALES */
+.firework{
+  position:fixed;
+  bottom:0;
+  width:6px;
+  height:6px;
+  background:white;
+  border-radius:50%;
+  animation:launch 1s linear forwards;
+}
+
+@keyframes launch{
+  to{
+    transform:translateY(-70vh);
+  }
+}
+
+.spark{
+  position:fixed;
+  width:5px;
+  height:5px;
+  border-radius:50%;
+}
+
+@keyframes spark{
+  to{
+    transform:translate(var(--x),var(--y));
+    opacity:0;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="hint" id="hint">🎁 Dame click para abrirme 🎁</div>
+<div class="arrow" id="arrow">⬇</div>
+
+<div class="centerArea">
+  <div class="envelope" id="envelope">
+    <div class="flap"></div>
+  </div>
+</div>
+
+<div class="messageContainer" id="messageContainer">
+  <h1>¡FELIZ CUMPLEAÑOS FER!</h1>
+  <p>
+  Hoy cumple años Fer, la que sabe vacilar,<br>
+  se ríe de los celiacos sin dejar de bromear. <br>
+  “Tranquila, no soy Dexter…”, ella dice al pasar,<br>
+  pero si hay tarta cerca… ¡la hace desaparecer sin avisar! <br><br>
+  Brindemos por Fer, que no deja de sorprender,<br>
+  feliz cumple, loca, que sigas así… ¡hasta enloquecer! 
+  </p>
+</div>
+
+<script>
+document.body.addEventListener("click", openEnvelope, { once: true });
+
+function openEnvelope(){
+  const envelope = document.getElementById("envelope");
+  const container = document.getElementById("messageContainer");
+
+  // Oculta texto inicial
+  document.getElementById("hint").style.display="none";
+  document.getElementById("arrow").style.display="none";
+
+  // Desaparece el sobre inmediatamente
+  envelope.style.transform="scale(0)";
+  envelope.style.opacity="0";
+  setTimeout(()=>{ envelope.style.display="none"; }, 500);
+
+  // Confeti explosión
+  for(let i=0;i<200;i++){
+    let c=document.createElement("div");
+    c.className="confetti";
+    let colors=["red","yellow","blue","green","purple","orange"];
+    c.style.background=colors[Math.floor(Math.random()*colors.length)];
+    let x=(Math.random()*600-300)+"px";
+    let y=(Math.random()*600-300)+"px";
+    c.style.setProperty("--x",x);
+    c.style.setProperty("--y",y);
+    c.style.left="50%";
+    c.style.top="50%";
+    c.style.animation="explode 1.2s forwards";
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),1200);
+  }
+
+  // Globos
+  for(let i=0;i<40;i++){
+    let b=document.createElement("div");
+    b.className="balloon";
+    let colors=["red","blue","yellow","green","pink","orange"];
+    b.style.background=colors[Math.floor(Math.random()*colors.length)];
+    b.style.left=Math.random()*100+"vw";
+    b.style.animationDuration=(5+Math.random()*5)+"s";
+    document.body.appendChild(b);
+  }
+
+  // Confeti cayendo infinito
+  setInterval(()=>{
+    let c=document.createElement("div");
+    c.className="fallConfetti";
+    let colors=["red","yellow","blue","green","purple","orange"];
+    c.style.background=colors[Math.floor(Math.random()*colors.length)];
+    c.style.left=Math.random()*100+"vw";
+    c.style.animationDuration=(3+Math.random()*3)+"s";
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),6000);
+  },120);
+
+  // Fuegos artificiales
+  for(let i=0;i<5;i++){
+    setTimeout(firework, i*700);
+  }
+
+  // Mostrar mensaje principal + rima
+  setTimeout(()=>{
+    container.style.opacity="1";
+  },500);
+}
+
+// Fuegos artificiales
+function firework(){
+  let f=document.createElement("div");
+  f.className="firework";
+  f.style.left=Math.random()*100+"vw";
+  document.body.appendChild(f);
+
+  setTimeout(()=>{
+    for(let i=0;i<25;i++){
+      let s=document.createElement("div");
+      s.className="spark";
+      let colors=["red","yellow","blue","white","orange"];
+      s.style.background=colors[Math.floor(Math.random()*colors.length)];
+      let x=(Math.random()*200-100)+"px";
+      let y=(Math.random()*200-100)+"px";
+      s.style.setProperty("--x",x);
+      s.style.setProperty("--y",y);
+      s.style.left=f.style.left;
+      s.style.top="30vh";
+      s.style.animation="spark 1s forwards";
+      document.body.appendChild(s);
+      setTimeout(()=>s.remove(),1000);
+    }
+    f.remove();
+  },1000);
+}
+</script>
+
+</body>
+</html>

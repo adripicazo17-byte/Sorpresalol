@@ -16,9 +16,9 @@ body{
   justify-content:center;
   height:100vh;
   text-align:center;
+  perspective:1000px; /* Para los globos 3D */
 }
 
-/* TEXTO INICIAL */
 .hint{
   position:absolute;
   top:50px;
@@ -46,24 +46,25 @@ body{
   50%{transform:translateY(10px)}
 }
 
-/* SOBRE */
 .centerArea{
   position:relative;
   display:flex;
   align-items:center;
   justify-content:center;
+  z-index:1;
 }
 
 .envelope{
   position:relative;
   width:400px;
   height:280px;
-  background:#800080; /* sobre morado */
+  background:#800080;
   border-radius:6px;
   display:flex;
   align-items:center;
   justify-content:center;
   transition:all 0.5s ease;
+  z-index:2;
 }
 
 .flap{
@@ -75,11 +76,8 @@ body{
   border-left:200px solid transparent;
   border-right:200px solid transparent;
   border-top:140px solid #6a0dad;
-  transform-origin:top;
-  transition:transform 0.8s;
 }
 
-/* MENSAJE PRINCIPAL */
 .messageContainer{
   position:absolute;
   top:50%;
@@ -87,6 +85,7 @@ body{
   transform:translate(-50%, -50%);
   opacity:0;
   text-align:center;
+  z-index:3;
 }
 
 .messageContainer h1{
@@ -104,7 +103,6 @@ body{
   line-height:1.5;
   max-width:700px;
   margin:0 auto;
-  color:#333;
 }
 
 @keyframes rainbow{
@@ -116,94 +114,66 @@ body{
   100%{color:#ff00ea;}
 }
 
-/* CONFETI EXPLOSION */
-.confetti{
-  position:fixed;
-  width:8px;
-  height:8px;
+/* --- Globos 3D --- */
+.balloon{
+  position:absolute;
+  bottom:-100px;
+  width:40px;
+  height:60px;
+  border-radius:50% 50% 50% 50%;
+  opacity:0.9;
+  transform-style: preserve-3d;
+  animation:rise3D linear infinite;
 }
 
-@keyframes explode{
-  to{
-    transform:translate(var(--x),var(--y)) rotate(720deg);
+@keyframes rise3D{
+  0%{
+    transform: translateY(0) translateZ(0) rotateX(0deg) rotateY(0deg);
+    opacity:0.9;
+  }
+  50%{
+    transform: translateY(-50vh) translateZ(50px) rotateX(180deg) rotateY(90deg);
+  }
+  100%{
+    transform: translateY(-110vh) translateZ(-50px) rotateX(360deg) rotateY(180deg);
     opacity:0;
   }
 }
 
-/* CONFETI INFINITO */
-.fallConfetti{
-  position:fixed;
-  top:-10px;
-  width:10px;
-  height:10px;
-  animation:fall linear infinite;
-}
-
-@keyframes fall{
-  to{
-    transform:translateY(110vh) rotate(720deg);
-  }
-}
-
-/* GLOBOS */
-.balloon{
-  position:fixed;
-  bottom:-100px;
-  width:40px;
-  height:50px;
-  border-radius:50%;
-  animation:riseBalloon linear forwards;
-}
-
-.balloon::after{
-  content:"";
-  position:absolute;
-  width:2px;
-  height:40px;
-  background:#555;
-  left:50%;
-  top:50px;
-}
-
-@keyframes riseBalloon{
-  to{
-    transform:translateY(-120vh);
-  }
-}
-
-/* FUEGOS ARTIFICIALES */
+/* --- Fuegos artificiales --- */
 .firework{
-  position:fixed;
-  bottom:0;
+  position:absolute;
   width:6px;
   height:6px;
   background:white;
   border-radius:50%;
-  animation:launch 1s linear forwards;
+  box-shadow: 0 0 8px 2px #ff0,0 0 15px 3px #f0f;
+  animation:explode 1s ease-out forwards;
 }
 
-@keyframes launch{
-  to{
-    transform:translateY(-70vh);
-  }
+@keyframes explode{
+  0%{transform:scale(1); opacity:1;}
+  100%{transform:scale(10); opacity:0;}
 }
 
-.spark{
-  position:fixed;
-  width:5px;
-  height:5px;
-  border-radius:50%;
-}
-
-@keyframes spark{
-  to{
-    transform:translate(var(--x),var(--y));
-    opacity:0;
-  }
+/* --- Canvas confeti --- */
+#confettiCanvas{
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:0;
 }
 </style>
 </head>
+
 <body>
+
+<audio id="music" loop>
+  <source src="musica de espera [LKet1ff5C2s].mp3" type="audio/mpeg">
+</audio>
 
 <div class="hint" id="hint">🎁 Dame click para abrirme 🎁</div>
 <div class="arrow" id="arrow">⬇</div>
@@ -222,102 +192,123 @@ body{
   “Tranquila, no soy Dexter…”, ella dice al pasar,<br>
   pero si hay tarta cerca… ¡la hace desaparecer sin avisar! <br><br>
   Brindemos por Fer, que no deja de sorprender,<br>
-  feliz cumple, loca, que sigas así… ¡hasta enloquecer! 
+  feliz cumple, loca, que sigas así… ¡hasta enloquecer!
   </p>
 </div>
 
+<canvas id="confettiCanvas"></canvas>
+
 <script>
+window.addEventListener("load", function(){
+  let audio = document.getElementById("music");
+  audio.play().catch(()=>{});
+});
+
 document.body.addEventListener("click", openEnvelope, { once: true });
 
 function openEnvelope(){
+  let audio = document.getElementById("music");
+  audio.play();
+
   const envelope = document.getElementById("envelope");
   const container = document.getElementById("messageContainer");
 
-  // Oculta texto inicial
   document.getElementById("hint").style.display="none";
   document.getElementById("arrow").style.display="none";
 
-  // Desaparece el sobre inmediatamente
   envelope.style.transform="scale(0)";
   envelope.style.opacity="0";
   setTimeout(()=>{ envelope.style.display="none"; }, 500);
 
-  // Confeti explosión
-  for(let i=0;i<200;i++){
-    let c=document.createElement("div");
-    c.className="confetti";
-    let colors=["red","yellow","blue","green","purple","orange"];
-    c.style.background=colors[Math.floor(Math.random()*colors.length)];
-    let x=(Math.random()*600-300)+"px";
-    let y=(Math.random()*600-300)+"px";
-    c.style.setProperty("--x",x);
-    c.style.setProperty("--y",y);
-    c.style.left="50%";
-    c.style.top="50%";
-    c.style.animation="explode 1.2s forwards";
-    document.body.appendChild(c);
-    setTimeout(()=>c.remove(),1200);
-  }
-
-  // Globos
-  for(let i=0;i<40;i++){
-    let b=document.createElement("div");
-    b.className="balloon";
-    let colors=["red","blue","yellow","green","pink","orange"];
-    b.style.background=colors[Math.floor(Math.random()*colors.length)];
-    b.style.left=Math.random()*100+"vw";
-    b.style.animationDuration=(5+Math.random()*5)+"s";
-    document.body.appendChild(b);
-  }
-
-  // Confeti cayendo infinito
-  setInterval(()=>{
-    let c=document.createElement("div");
-    c.className="fallConfetti";
-    let colors=["red","yellow","blue","green","purple","orange"];
-    c.style.background=colors[Math.floor(Math.random()*colors.length)];
-    c.style.left=Math.random()*100+"vw";
-    c.style.animationDuration=(3+Math.random()*3)+"s";
-    document.body.appendChild(c);
-    setTimeout(()=>c.remove(),6000);
-  },120);
-
-  // Fuegos artificiales
-  for(let i=0;i<5;i++){
-    setTimeout(firework, i*700);
-  }
-
-  // Mostrar mensaje principal + rima
   setTimeout(()=>{
     container.style.opacity="1";
+    startConfetti();
+    launchFireworks();
+    setInterval(launchFireworks, 1500); // Fuegos artificiales continuos
+    generateBalloons(30); // Globos 3D
   },500);
 }
 
-// Fuegos artificiales
-function firework(){
-  let f=document.createElement("div");
-  f.className="firework";
-  f.style.left=Math.random()*100+"vw";
-  document.body.appendChild(f);
+/* --- Globos 3D --- */
+function generateBalloons(num){
+  const colors = ['#ff4da6','#00ccff','#ffcc00','#ff6600','#33cc33'];
+  for(let i=0;i<num;i++){
+    let balloon = document.createElement('div');
+    balloon.className='balloon';
+    balloon.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
+    
+    balloon.style.left = Math.random()*90+'vw';
+    let scale = 0.5 + Math.random()*1.5;
+    balloon.style.transform = `scale(${scale}) translateZ(${Math.random()*100-50}px)`;
+    
+    balloon.style.animationDuration = (5 + Math.random()*5)+'s';
+    
+    document.body.appendChild(balloon);
+  }
+}
 
-  setTimeout(()=>{
-    for(let i=0;i<25;i++){
-      let s=document.createElement("div");
-      s.className="spark";
-      let colors=["red","yellow","blue","white","orange"];
-      s.style.background=colors[Math.floor(Math.random()*colors.length)];
-      let x=(Math.random()*200-100)+"px";
-      let y=(Math.random()*200-100)+"px";
-      s.style.setProperty("--x",x);
-      s.style.setProperty("--y",y);
-      s.style.left=f.style.left;
-      s.style.top="30vh";
-      s.style.animation="spark 1s forwards";
-      document.body.appendChild(s);
-      setTimeout(()=>s.remove(),1000);
+/* --- Fuegos artificiales --- */
+function launchFireworks(){
+  for(let i=0;i<10;i++){
+    setTimeout(()=>{
+      let fw = document.createElement('div');
+      fw.className='firework';
+      fw.style.left=Math.random()*window.innerWidth+'px';
+      fw.style.top=Math.random()*window.innerHeight/2+'px';
+      document.body.appendChild(fw);
+      setTimeout(()=>fw.remove(),1000);
+    }, i*200);
+  }
+}
+
+/* --- Confeti --- */
+function startConfetti(){
+  const canvas = document.getElementById('confettiCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const confetti = [];
+  const colors = ['#ff0','#f0f','#0ff','#0f0','#ff6600'];
+
+  for(let i=0;i<150;i++){
+    confetti.push({
+      x: Math.random()*canvas.width,
+      y: Math.random()*canvas.height,
+      r: Math.random()*6+2,
+      d: Math.random()*50+2,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      tilt: Math.floor(Math.random()*10)-10
+    });
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(let i=0;i<confetti.length;i++){
+      let c = confetti[i];
+      ctx.beginPath();
+      ctx.moveTo(c.x + c.tilt + c.r/2, c.y);
+      ctx.lineTo(c.x + c.tilt, c.y + c.r);
+      ctx.lineTo(c.x + c.tilt - c.r/2, c.y);
+      ctx.fillStyle=c.color;
+      ctx.fill();
     }
-    f.remove();
-  },1000);
+    update();
+  }
+
+  let angle=0;
+  function update(){
+    angle += 0.01;
+    for(let i=0;i<confetti.length;i++){
+      let c=confetti[i];
+      c.y += (Math.cos(angle+c.d)+1+c.r/2)/2;
+      c.x += Math.sin(angle);
+      if(c.y>canvas.height){ c.y=0; c.x=Math.random()*canvas.width; }
+    }
+    requestAnimationFrame(draw);
+  }
+
+  draw();
 }
 </script>
 
